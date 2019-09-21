@@ -9,7 +9,7 @@ jobs:
     - name: "If a PR, check that distribution files are unmodified"
       if: github.event_name == 'pull_request'
       run: |
-        if git --no-pager diff --name-only ${{ github.base_ref }}...${{ github.ref }} | grep -q "^dist/"; then
+        if git --no-pager diff --name-only $(git rev-parse ${{ github.base_ref }})...$(git rev-parse ${{ github.ref }}) | grep -q "^dist/"; then
           printf "\nThe pull request modifies distribution files, but it shouldn't.\n" &&
           printf "Please see https://github.com/AssemblyScript/assemblyscript/blob/master/CONTRIBUTING.md\n" &&
           exit 1;
