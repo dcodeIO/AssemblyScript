@@ -14,6 +14,8 @@ jobs:
         echo "head ${{ github.head_ref }} $(git merge-base FETCH_HEAD origin/${{ github.head_ref }})"
         echo "base changes $(git --no-pager diff --name-only FETCH_HEAD $(git merge-base FETCH_HEAD origin/${{ github.base_ref }}))"
         echo "head changes $(git --no-pager diff --name-only FETCH_HEAD $(git merge-base FETCH_HEAD origin/${{ github.head_ref }}))"
+        git fetch
+        git branch
         git remote
         git status
         if git --no-pager diff --name-only FETCH_HEAD $(git merge-base FETCH_HEAD origin/${{ github.base_ref }}) | grep -q "^dist/"; then
