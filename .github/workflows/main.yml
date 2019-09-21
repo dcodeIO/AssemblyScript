@@ -9,9 +9,9 @@ jobs:
     - name: "If a PR, check that distribution files are unmodified"
       if: github.event_name == 'pull_request'
       run: |
-        echo "??? $(git merge-base FETCH_HEAD origin/${{ github.base_ref }}"
+        echo "??? $(git merge-base FETCH_HEAD origin/${{ github.base_ref }})"
         git fetch origin master
-        echo "??? $(git merge-base FETCH_HEAD ${{ github.base_ref }}"
+        echo "??? $(git merge-base FETCH_HEAD ${{ github.base_ref }})"
         if git --no-pager diff --name-only FETCH_HEAD $(git merge-base FETCH_HEAD origin/${{ github.base_ref }}) | grep -q "^dist/"; then
           printf "\nThe pull request modifies distribution files, but it shouldn't.\n" &&
           printf "Please see https://github.com/AssemblyScript/assemblyscript/blob/master/CONTRIBUTING.md\n" &&
