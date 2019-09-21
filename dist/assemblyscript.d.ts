@@ -1,4 +1,5 @@
 declare type bool = boolean;
+
 declare type i8 = number;
 declare type i16 = number;
 declare type i32 = number;
