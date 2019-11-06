@@ -1,0 +1,44 @@
+on:
+  schedule:
+    - cron: '15 * * * *'
+jobs:
+  publish:
+    name: "Publish to npm and gpr"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: actions/setup-node@v1
+    - name: Install dependencies
+      run: npm ci
+    - name: Build distribution files
+      run: npm run make
+    - name: Set up version
+      run: |
+        VERSION=$(node -e "console.log(require('./package.json').version)")
+        git fetch --tags
+        git add -f dist/*
+        if git rev-parse v$VERSION >/dev/null 2>&1; then
+          VERSION=$VERSION-nightly.$(date "+%Y%m%d")
+          echo ::set-env name=CHANNEL::nightly
+          echo "Committing nightly ($VERSION) ..."
+          git commit -m "Nightly v$VERSION"
+        else
+          echo ::set-env name=CHANNEL::latest
+          git add package.json package-lock.json
+          echo "Committing release ($VERSION) ..."
+          git commit -m "Release v$VERSION"
+        fi
+        npm version $VERSION --no-git-tag-version --force
+        git tag v$VERSION
+    #   git push -u origin v$VERSION
+    # - name: Publish to npm
+    #   run: npm publish --tag $CHANNEL
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+    # - uses: actions/setup-node@v1
+    #   with:
+    #     registry-url: 'https://npm.pkg.github.com'
+    # - name: Publish to gpr
+    #   run: npm publish --tag $CHANNEL
+    #   env:
+    #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
