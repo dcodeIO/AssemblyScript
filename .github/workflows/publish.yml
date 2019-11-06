@@ -16,6 +16,8 @@ jobs:
     - name: Set up version
       run: |
         VERSION=$(node -e "console.log(require('./package.json').version)")
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Action"
         git fetch --tags
         git add -f dist/*
         if git rev-parse v$VERSION >/dev/null 2>&1; then
