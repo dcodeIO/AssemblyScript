@@ -8,6 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+      with:
+        ref: dist
+    - name: Merge master
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Action"
+        git fetch --tags
+        git merge master
     - uses: actions/setup-node@v1
     - name: Install dependencies
       run: npm ci
@@ -16,24 +24,24 @@ jobs:
     - name: Set up version
       run: |
         VERSION=$(node -e "console.log(require('./package.json').version)")
-        git config --global user.email "actions@github.com"
-        git config --global user.name "GitHub Action"
-        git fetch --tags
         git add -f dist/*
         if git rev-parse v$VERSION >/dev/null 2>&1; then
           VERSION=$VERSION-nightly.$(date "+%Y%m%d")
+          if git rev-parse v$VERSION >/dev/null 2>&1; then
+            exit 1
+          fi
           echo ::set-env name=CHANNEL::nightly
           echo "Committing nightly ($VERSION) ..."
           git commit -m "Nightly v$VERSION"
+          npm version $VERSION --no-git-tag-version --force
         else
           echo ::set-env name=CHANNEL::latest
-          git add package.json package-lock.json
           echo "Committing release ($VERSION) ..."
           git commit -m "Release v$VERSION"
         fi
-        npm version $VERSION --no-git-tag-version --force
+        git push -u origin dist
         git tag v$VERSION
-    #   git push -u origin v$VERSION
+        git push -u origin v$VERSION
     # - name: Publish to npm
     #   run: npm publish --tag $CHANNEL
     #   env:
