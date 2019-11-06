@@ -2,6 +2,7 @@ on:
   push:
     branches: 
       - master
+
 jobs:
   publish:
     name: "Publish to npm and gpr"
