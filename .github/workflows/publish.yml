@@ -1,6 +1,7 @@
 on:
-  schedule:
-    - cron: '15 * * * *'
+  push:
+    branches: 
+      - master
 jobs:
   publish:
     name: "Publish to npm and gpr"
