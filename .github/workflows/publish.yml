@@ -18,13 +18,19 @@ jobs:
     - name: Install dependencies
       run: npm ci
     - name: Build distribution files
-      run: npm run make
+      run: |
+        npm run clean
+        npm run build
+    - name: Test distribution files
+      run: npm test
     - name: Set up version
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION=$(node -e "console.log(require('./package.json').version)")
-        git add -f dist/*
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add --force dist/*
         if git rev-parse v$VERSION >/dev/null 2>&1; then
           VERSION=$VERSION-nightly.$(date "+%Y%m%d")
           if git rev-parse v$VERSION >/dev/null 2>&1; then
@@ -40,11 +46,9 @@ jobs:
           echo "Committing release ($VERSION) ..."
           git commit -m "Release v$VERSION"
         fi
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@github.com"
         git remote set-url origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         git tag v$VERSION
-        git push origin dist --follow-tags
+        git push --follow-tags origin dist
     # - name: Publish to npm
     #   run: npm publish --tag $CHANNEL
     #   env:
