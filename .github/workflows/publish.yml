@@ -1,3 +1,4 @@
+name: Publish
 on:
   push:
     branches: 
@@ -47,8 +48,9 @@ jobs:
           git commit -m "Release v$VERSION"
         fi
         git remote set-url origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        git push origin dist
         git tag v$VERSION
-        git push --follow-tags origin dist
+        git push origin v$VERSION
     # - name: Publish to npm
     #   run: npm publish --tag $CHANNEL
     #   env:
