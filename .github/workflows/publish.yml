@@ -13,6 +13,8 @@ jobs:
         ref: dist
     - name: Merge master
       run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
         git fetch origin
         git merge origin/master
     - uses: actions/setup-node@v1
@@ -29,8 +31,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION=$(node -e "console.log(require('./package.json').version)")
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
         git add --force dist/*
         if git rev-parse v$VERSION >/dev/null 2>&1; then
           VERSION=$VERSION-nightly.$(date "+%Y%m%d")
