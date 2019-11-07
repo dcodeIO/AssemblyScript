@@ -1,17 +1,23 @@
+name: Publish
 on:
   push:
     branches: 
       - master
 jobs:
   publish:
-    name: "Publish to npm and gpr"
+    name: "Publish packages"
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
       with:
         ref: dist
     - name: Merge master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git remote set-url origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
         git fetch origin
         git merge origin/master
     - uses: actions/setup-node@v1
@@ -24,18 +30,14 @@ jobs:
     - name: Test distribution files
       run: npm test
     - name: Set up version
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         VERSION=$(node -e "console.log(require('./package.json').version)")
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
         git add --force dist/*
         if git rev-parse v$VERSION >/dev/null 2>&1; then
           VERSION=$VERSION-nightly.$(date "+%Y%m%d")
           if git rev-parse v$VERSION >/dev/null 2>&1; then
-            echo "Nightly {$VERSION} does already exist."
-            exit 0
+            echo "Nightly $VERSION does already exist."
+            exit 1
           fi
           echo ::set-env name=CHANNEL::nightly
           echo "Committing nightly ($VERSION) ..."
@@ -44,19 +46,32 @@ jobs:
         else
           echo ::set-env name=CHANNEL::latest
           echo "Committing release ($VERSION) ..."
-          git commit -m "Release v$VERSION"
+          git commit --allow-empty -m "Release v$VERSION"
         fi
-        git remote set-url origin "https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+        echo ::set-env name=VERSION::$VERSION
+    - name: Create tag and push distribution files
+      run: |
         git tag v$VERSION
-        git push --follow-tags origin dist
-    # - name: Publish to npm
-    #   run: npm publish --tag $CHANNEL
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-    # - uses: actions/setup-node@v1
-    #   with:
-    #     registry-url: 'https://npm.pkg.github.com'
-    # - name: Publish to gpr
-    #   run: npm publish --tag $CHANNEL
-    #   env:
-    #     NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        git push origin dist
+        git push origin v$VERSION
+    - name: Publish to npm
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        echo "npm publish --tag $CHANNEL"
+        cd ./lib/loader
+        npm version $VERSION --no-git-tag-version --force
+        echo "npm publish --tag $CHANNEL"
+        cd ../..
+    - uses: actions/setup-node@v1
+      with:
+        registry-url: 'https://npm.pkg.github.com'
+        scope: '@AssemblyScript'
+    - name: Publish to gpr
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        echo "npm publish --tag $CHANNEL"
+        cd ./lib/loader
+        echo "npm publish --tag $CHANNEL"
+        cd ../..
