@@ -19,12 +19,12 @@ jobs:
         node-version: current
     - name: Install dependencies
       run: npm ci
-    - name: Build distribution files
-      run: |
-        npm run clean
-        npm run build
-    - name: Test distribution files
-      run: npm test
+    # - name: Build distribution files
+    #   run: |
+    #     npm run clean
+    #     npm run build
+    # - name: Test distribution files
+    #   run: npm test
     - name: Make release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
