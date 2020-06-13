@@ -1,0 +1,32 @@
+name: Release
+on:
+  push:
+    branches:
+    - master
+  schedule:
+  - cron: '0 0 * * *'
+jobs:
+  release:
+    name: Release
+    if: github.repository == 'dcodeIO/assemblyscript'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        ref: master
+    - uses: dcodeIO/setup-node-nvm@master
+      with:
+        node-version: current
+    - name: Install dependencies
+      run: npm ci
+    - name: Build distribution files
+      run: |
+        npm run clean
+        npm run build
+    - name: Test distribution files
+      run: npm test
+    - name: Make release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: node node_modules/semantic-release/bin/semantic-release.js --dry-run
